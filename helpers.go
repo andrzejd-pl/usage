@@ -16,7 +16,7 @@ func CheckErrorWithOnlyLogging(logger io.Writer, err error) {
 func checkError(logger io.Writer, err error, _panic bool) {
 	if err != nil {
 		if _panic {
-			panic("error: " + err.Error())
+			panic("error: " + err.Error() + "\n")
 		}
 
 		_, err := fmt.Fprintf(logger, "error: %s\n", err.Error())
