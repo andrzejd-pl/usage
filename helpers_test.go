@@ -28,15 +28,15 @@ func TestCheckErrorWithPanic(t *testing.T) {
 			name: "Empty error",
 			got:  errors.New(""),
 			want: wants{
-				bufferValue: "",
+				bufferValue: "error: \n",
 				panic:       true,
 			},
 		},
 		{
 			name: "Error with test data",
-			got:  errors.New("Test"),
+			got:  errors.New("test"),
 			want: wants{
-				bufferValue: "test",
+				bufferValue: "error: test\n",
 				panic:       true,
 			},
 		},
@@ -44,20 +44,22 @@ func TestCheckErrorWithPanic(t *testing.T) {
 
 	for _, tt := range testSet {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.want.panic {
-				defer func() {
-					if r := recover(); r == nil {
+			defer func() {
+				r := recover()
+
+				if tt.want.panic {
+					if r == nil {
 						t.Error("code did not panic, but want it")
+					} else if r != tt.want.bufferValue {
+						t.Errorf("got writer value %s want %s", r, tt.want.bufferValue)
 					}
-				}()
-			}
+				} else if r != nil {
+					t.Error("code panic, but did not want it")
+				}
+			}()
 
 			writer := bytes.NewBufferString("")
 			CheckErrorWithPanic(writer, tt.got)
-
-			if buff := string(writer.Bytes()); buff != tt.want.bufferValue {
-				t.Errorf("got writer value %s want %s", buff, tt.want.bufferValue)
-			}
 		})
 	}
 }
