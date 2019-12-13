@@ -61,3 +61,44 @@ func TestCheckErrorWithPanic(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckErrorWithOnlyLogging(t *testing.T) {
+	testSet := []struct {
+		name string
+		got  error
+		want string
+	}{
+		{
+			name: "Empty test",
+			got:  nil,
+			want: "",
+		},
+		{
+			name: "Empty error",
+			got:  errors.New(""),
+			want: "error: \n",
+		},
+		{
+			name: "Error with test data",
+			got:  errors.New("test"),
+			want: "error: test\n",
+		},
+	}
+
+	for _, tt := range testSet {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Error("code panic, but did not want it")
+				}
+			}()
+
+			writer := bytes.NewBufferString("")
+			CheckErrorWithOnlyLogging(writer, tt.got)
+
+			if buff := string(writer.Bytes()); buff != tt.want {
+				t.Errorf("got writer value %s want %s", buff, tt.want)
+			}
+		})
+	}
+}
