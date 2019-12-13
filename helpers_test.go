@@ -3,30 +3,22 @@ package usage
 import (
 	"bytes"
 	"errors"
-	"io"
 	"testing"
 )
 
 func TestCheckErrorWithPanic(t *testing.T) {
-	type args struct {
-		writer io.Writer
-		err    error
-	}
 	type wants struct {
 		bufferValue string
 		panic       bool
 	}
 	testSet := []struct {
 		name string
-		got  args
+		got  error
 		want wants
 	}{
 		{
 			name: "Empty test",
-			got: args{
-				writer: bytes.NewBufferString(""),
-				err:    nil,
-			},
+			got:  nil,
 			want: wants{
 				bufferValue: "",
 				panic:       false,
@@ -34,10 +26,7 @@ func TestCheckErrorWithPanic(t *testing.T) {
 		},
 		{
 			name: "Empty error",
-			got: args{
-				writer: bytes.NewBufferString(""),
-				err:    errors.New(""),
-			},
+			got:  errors.New(""),
 			want: wants{
 				bufferValue: "",
 				panic:       true,
@@ -45,10 +34,7 @@ func TestCheckErrorWithPanic(t *testing.T) {
 		},
 		{
 			name: "Error with test data",
-			got: args{
-				writer: bytes.NewBufferString(""),
-				err:    errors.New("Test"),
-			},
+			got:  errors.New("Test"),
 			want: wants{
 				bufferValue: "test",
 				panic:       true,
@@ -66,7 +52,12 @@ func TestCheckErrorWithPanic(t *testing.T) {
 				}()
 			}
 
-			CheckErrorWithPanic(tt.got.writer, tt.got.err)
+			writer := bytes.NewBufferString("")
+			CheckErrorWithPanic(writer, tt.got)
+
+			if buff := string(writer.Bytes()); buff != tt.want.bufferValue {
+				t.Errorf("got writer value %s want %s", buff, tt.want.bufferValue)
+			}
 		})
 	}
 }
